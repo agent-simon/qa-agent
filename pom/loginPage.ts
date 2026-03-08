@@ -1,49 +1,74 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator, expect } from '@playwright/test';
 
 export class LoginPage {
   readonly page: Page;
-  readonly usernameInput: Locator;
-  readonly passwordInput: Locator;
+  readonly usernameField: Locator;
+  readonly passwordField: Locator;
   readonly loginButton: Locator;
-  readonly pageTitle: Locator;
-  readonly flashMessage: Locator;
+  readonly googleButton: Locator;
+  readonly smeButton: Locator;
+  readonly showPasswordButton: Locator;
+  readonly pageHeading: Locator;
+  readonly loginForm: Locator;
 
   constructor(page: Page) {
     this.page = page;
-    this.usernameInput = page.locator('#username');
-    this.passwordInput = page.locator('#password');
-    this.loginButton = page.locator('button[type="submit"]');
-    this.pageTitle = page.locator('h2');
-    this.flashMessage = page.locator('#flash');
+    this.usernameField = page.locator('#username');
+    this.passwordField = page.locator('#password');
+    this.loginButton = page.locator('#login_login_buttonText');
+    this.googleButton = page.locator('button:has-text("Continue with Google")');
+    this.smeButton = page.locator('button:has-text("Continue with SME O365")');
+    this.showPasswordButton = page.locator('button:has-text("Show password")');
+    this.pageHeading = page.locator('h1:has-text("Login to The Orchard")');
+    this.loginForm = page.locator('form');
   }
 
   async goto() {
-    await this.page.goto('https://the-internet.herokuapp.com/login');
+    await this.page.goto('/login');
   }
 
-  async login(username: string, password: string) {
-    await this.usernameInput.fill(username);
-    await this.passwordInput.fill(password);
+  async enterUsername(username: string) {
+    await this.usernameField.fill(username);
+  }
+
+  async enterPassword(password: string) {
+    await this.passwordField.fill(password);
+  }
+
+  async clickLoginButton() {
     await this.loginButton.click();
   }
 
-  async getPageTitle() {
-    return await this.pageTitle.textContent();
+  async clickGoogleButton() {
+    await this.googleButton.click();
   }
 
-  async getFlashMessage() {
-    return await this.flashMessage.textContent();
+  async clickSMEButton() {
+    await this.smeButton.click();
   }
 
-  async isUsernameInputVisible() {
-    return await this.usernameInput.isVisible();
+  async togglePasswordVisibility() {
+    await this.showPasswordButton.click();
   }
 
-  async isPasswordInputVisible() {
-    return await this.passwordInput.isVisible();
+  async isPasswordVisible() {
+    return await this.passwordField.getAttribute('type') === 'text';
   }
 
-  async isLoginButtonVisible() {
-    return await this.loginButton.isVisible();
+  async getPasswordFieldType() {
+    return await this.passwordField.getAttribute('type');
+  }
+
+  async getUsernameValue() {
+    return await this.usernameField.inputValue();
+  }
+
+  async getPasswordValue() {
+    return await this.passwordField.inputValue();
+  }
+
+  async waitForPageLoad() {
+    await this.pageHeading.waitFor({ state: 'visible' });
+    await this.loginForm.waitFor({ state: 'visible' });
   }
 }

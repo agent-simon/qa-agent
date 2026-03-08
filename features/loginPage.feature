@@ -1,34 +1,46 @@
-Feature: Login Page Smoke Test
-  As a user
-  I want to access the login page
-  So that I can authenticate into the application
+Feature: Login Page
 
   Background:
-    Given I navigate to the login page
+    Given I am on the login page
 
-  Scenario: Login page loads successfully
-    Then I should see the login page title "Login Page"
-    And I should see the username input field
-    And I should see the password input field
-    And I should see the login button
+  Scenario: Page loads with all required elements
+    Then I should see the login form
+    And I should see the username field
+    And I should see the password field
+    And I should see the "LOG IN" button
+    And I should see the "Continue with Google" button
+    And I should see the "Continue with SME O365" button
+    And I should see the page heading "Login to The Orchard"
 
-  Scenario: Successful login with valid credentials
-    When I enter "tomsmith" in the username field
-    And I enter "SuperSecretPassword!" in the password field
-    And I click the login button
-    Then I should be redirected to the secure area
-    And I should see a success message
+  Scenario: Password visibility toggle functionality
+    When I enter a password
+    And I click the show password button
+    Then the password should be visible
+    When I click the hide password button
+    Then the password should be hidden
 
-  Scenario: Login fails with invalid credentials
-    When I enter "invaliduser" in the username field
-    And I enter "wrongpassword" in the password field
-    And I click the login button
-    Then I should see an error message
-    And I should remain on the login page
+  Scenario: Form validation for empty fields
+    When I click the "LOG IN" button without entering credentials
+    Then I should see validation errors
 
-  Scenario: Login fails with empty credentials
-    When I leave the username field empty
-    And I leave the password field empty
-    And I click the login button
-    Then I should see an error message
-    And I should remain on the login page
+  Scenario: Username field accepts input
+    When I enter "testuser" in the username field
+    Then the username field should contain "testuser"
+
+  Scenario: Password field accepts input
+    When I enter "testpassword" in the password field
+    Then the password field should contain the entered password
+
+  Scenario: Login attempt with credentials
+    When I enter "testuser" in the username field
+    And I enter "testpassword" in the password field
+    And I click the "LOG IN" button
+    Then the login form should be submitted
+
+  Scenario: Google login button is functional
+    When I click the "Continue with Google" button
+    Then I should be redirected to Google authentication
+
+  Scenario: SME O365 login button is functional
+    When I click the "Continue with SME O365" button
+    Then I should be redirected to O365 authentication

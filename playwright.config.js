@@ -1,14 +1,15 @@
 const { defineConfig, devices } = require('@playwright/test');
+require('dotenv').config();
 
 module.exports = {
-  // ... existing config
   projects: [
     {
       name: 'smoke-tests',
       testMatch: '**/tests/*.spec.js',
       use: {
         ...devices['Chromium'],
-        baseURL: 'https://the-internet.herokuapp.com',
+        baseURL: process.env.BASE_URL,
+        headless: false,
       },
     },
   ],

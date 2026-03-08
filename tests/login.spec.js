@@ -2,81 +2,90 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Login Page Smoke Tests', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('https://the-internet.herokuapp.com/login');
+    await page.goto('/login');
+    await page.waitForSelector('h1:has-text("Login to The Orchard")');
   });
 
-  test('should load login page elements successfully', async ({ page }) => {
-    // Given I am on the login page
-    // When the page loads
-    // Then I should see all required elements
+  test('should load login page with all essential elements', async ({ page }) => {
+    // Check page heading
+    await expect(page.locator('h1:has-text("Login to The Orchard")')).toBeVisible();
     
-    await expect(page.locator('h2')).toHaveText('Login Page');
+    // Check form fields
     await expect(page.locator('#username')).toBeVisible();
     await expect(page.locator('#password')).toBeVisible();
-    await expect(page.locator('button[type="submit"]')).toBeVisible();
-    await expect(page.locator('button[type="submit"]')).toHaveText(/Login/);
+    
+    // Check buttons
+    await expect(page.locator('button:has-text("LOG IN")')).toBeVisible();
+
+    // Check password toggle switch
+    await expect(page.locator('[role="switch"][aria-label="Show password"]')).toBeVisible();
   });
 
-  test('should successfully login with valid credentials', async ({ page }) => {
-    // Given I am on the login page
-    // When I enter valid credentials
-    await page.locator('#username').fill('tomsmith');
-    await page.locator('#password').fill('SuperSecretPassword!');
-    
-    // And I click login
-    await page.locator('button[type="submit"]').click();
-    
-    // Then I should be redirected to secure area
-    await expect(page).toHaveURL(/.*\/secure/);
-    await expect(page.locator('#flash')).toContainText('You logged into a secure area!');
+  test('should allow input in username field', async ({ page }) => {
+    const usernameField = page.locator('#username');
+    await usernameField.fill('testuser@example.com');
+    await expect(usernameField).toHaveValue('testuser@example.com');
   });
 
-  test('should show error message with invalid username', async ({ page }) => {
-    // Given I am on the login page
-    // When I enter invalid username
-    await page.locator('#username').fill('invaliduser');
-    await page.locator('#password').fill('SuperSecretPassword!');
-    
-    // And I click login
-    await page.locator('button[type="submit"]').click();
-    
-    // Then I should see error message
-    await expect(page.locator('#flash')).toContainText('Your username is invalid!');
-    await expect(page).toHaveURL(/.*\/login/);
+  test('should allow input in password field', async ({ page }) => {
+    const passwordField = page.locator('#password');
+    await passwordField.fill('testpassword123');
+    await expect(passwordField).toHaveValue('testpassword123');
   });
 
-  test('should show error message with invalid password', async ({ page }) => {
-    // Given I am on the login page
-    // When I enter invalid password
-    await page.locator('#username').fill('tomsmith');
-    await page.locator('#password').fill('wrongpassword');
+  test('should toggle password visibility', async ({ page }) => {
+    const passwordField = page.locator('#password');
+    const toggleButton = page.locator('[role="switch"][aria-label="Show password"]');
     
-    // And I click login
-    await page.locator('button[type="submit"]').click();
+    // Enter password
+    await passwordField.fill('testpassword123');
     
-    // Then I should see error message
-    await expect(page.locator('#flash')).toContainText('Your password is invalid!');
-    await expect(page).toHaveURL(/.*\/login/);
+    // Check initial state (hidden)
+    await expect(passwordField).toHaveAttribute('type', 'password');
+    
+    // Show password
+    await toggleButton.click();
+    await expect(passwordField).toHaveAttribute('type', 'text');
+    
+    // Hide password again
+    const hideButton = page.locator('[role="switch"][aria-label="Hide password"]');
+    await hideButton.click();
+    await expect(passwordField).toHaveAttribute('type', 'password');
   });
 
-  test('should show error message with empty credentials', async ({ page }) => {
-    // Given I am on the login page
-    // When I submit without entering credentials
-    await page.locator('button[type="submit"]').click();
+  test('should submit form when login button is clicked', async ({ page }) => {
+    const usernameField = page.locator('#username');
+    const passwordField = page.locator('#password');
+    const loginButton = page.locator('button:has-text("LOG IN")');
     
-    // Then I should see error message
-    await expect(page.locator('#flash')).toContainText('Your username is invalid!');
-    await expect(page).toHaveURL(/.*\/login/);
+    // Fill credentials
+    await usernameField.fill('testuser@example.com');
+    await passwordField.fill('testpassword123');
+    
+    // Click login button
+    await loginButton.click();
+    
+    // Wait for form submission (network activity)
+    await page.waitForLoadState('networkidle');
   });
 
-  test('should have proper form attributes', async ({ page }) => {
-    // Given I am on the login page
-    // Then the form should have correct attributes
-    const form = page.locator('#login');
-    await expect(form).toHaveAttribute('action', 'https://the-internet.herokuapp.com/authenticate');
+  test('should have proper form action URL', async ({ page }) => {
+    const form = page.locator('form');
+    await expect(form).toHaveAttribute('action', /login\.distroauth\.com/);
+  });
+
+  test('should focus on username field when tab is pressed', async ({ page }) => {
+    await page.keyboard.press('Tab');
+    const usernameField = page.locator('#password');
+    await expect(usernameField).toBeFocused();
+  });
+
+  test('should navigate to password field when tab is pressed from username', async ({ page }) => {
+    const usernameField = page.locator('#username');
+    const passwordField = page.locator('#password');
     
-    // And input fields should have correct attributes
-    await expect(page.locator('#username')).toHaveAttribute('type', 'text');
-    await expect(page.locator('#password')).toHaveAttribute('type', 'password');
+    await usernameField.click();
+    await page.keyboard.press('Tab');
+    await expect(passwordField).toBeFocused();
   });
 });

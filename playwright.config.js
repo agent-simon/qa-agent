@@ -1,7 +1,7 @@
-const { defineConfig, devices } = require('@playwright/test');
-require('dotenv').config();
+import { defineConfig, devices } from '@playwright/test';
+import 'dotenv/config';
 
-module.exports = {
+export default {
   projects: [
     {
       name: 'smoke-tests',
